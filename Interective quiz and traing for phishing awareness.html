@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Security: Advanced Phishing Simulation Hub</title>
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-sidebar: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --status-success: #10b981;
+            --status-danger: #ef4444;
+            --status-warning: #f59e0b;
+            --border-glow: rgba(6, 182, 212, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Navigation Layout */
+        nav {
+            width: 300px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .nav-branding {
+            padding: 2.5rem 1.5rem;
+            background: linear-gradient(135deg, #111827 0%, #0b0f19 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-branding h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #06b6d4, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-branding p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 0.5rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 2rem 0;
+            flex-grow: 1;
+        }
+
+        .nav-link {
+            padding: 1.1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-main);
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+            border-left-color: var(--accent-cyan);
+        }
+
+        /* Core Application Execution Panel */
+        main {
+            margin-left: 300px;
+            flex-grow: 1;
+            padding: 3.5rem;
+            max-width: 1300px;
+            width: calc(100% - 300px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-panel {
+            display: none;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtext {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Component Blocks & Framework UI */
+        .interactive-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* Task 1 Frame: Inbox Splitter Window */
+        .split-inbox-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            height: 650px;
+        }
+
+        .inbox-list-pane {
+            background-color: rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-sub-header {
+            padding: 1.25rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .scrollable-email-list {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .email-list-node {
+            padding: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .email-list-node:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .email-list-node.active {
+            background-color: var(--bg-input);
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .email-list-node.complete::after {
+            content: "RESOLVED";
+            position: absolute;
+            right: 1.25rem;
+            top: 1.25rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--status-success);
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .node-sender { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
+        .node-subject { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .viewpane-display-window {
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            color: #1f2937;
+        }
+
+        .display-window-meta {
+            padding: 1.75rem;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .display-window-body {
+            padding: 2.5rem;
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .action-control-tray {
+            padding: 1.25rem;
+            background-color: var(--bg-sidebar);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Global UI Interactive Buttons */
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.1s ease, filter 0.2s ease;
+        }
+
+        .action-btn:active { transform: scale(0.98); }
+        .action-btn-safe { background-color: var(--status-success); color: white; }
+        .action-btn-warn { background-color: var(--status-warning); color: #000; }
+        .action-btn-danger { background-color: var(--status-danger); color: white; }
+        .action-btn-prime { background-color: var(--accent-cyan); color: var(--bg-main); }
+
+        .alert-toast-container {
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Task 2 Frame: Structural Dissector Box */
+        .forensic-em-box {
+            background-color: #ffffff;
+            color: #1f2937;
+            border-radius: 12px;
+            padding: 2.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .hotspot-tag {
+            background-color: rgba(245, 158, 11, 0.12);
+            border: 1px dashed var(--status-warning);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #d97706;
+            transition: all 0.2s ease;
+        }
+
+        .hotspot-tag:hover {
+            background-color: rgba(239, 68, 68, 0.12);
+            border-color: var(--status-danger);
+            color: var(--status-danger);
+        }
+
+        .forensic-console-log {
+            margin-top: 2rem;
+            background-color: var(--bg-sidebar);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            min-height: 90px;
+        }
+
+        /* Task 3 Frame: Multi-Session Quiz Matrix */
+        .session-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-select-card {
+            background-color: var(--bg-card);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .session-select-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 12px 20px -10px var(--border-glow);
+        }
+
+        .session-select-card.active {
+            border-color: var(--accent-cyan);
+            background-color: rgba(6, 182, 212, 0.03);
+        }
+
+        .session-select-card h4 {
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .session-select-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .quiz-engine-wrapper {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 3rem;
+            margin-top: 2rem;
+        }
+
+        .linear-progress-track {
+            height: 6px;
+            background-color: var(--bg-input);
+            border-radius: 3px;
+            margin: 1.5rem 0 2.5rem 0;
+            overflow: hidden;
+        }
+
+        .linear-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .quiz-choice-element {
+            background-color: var(--bg-input);
+            border: 1px solid transparent;
+            color: var(--text-main);
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            border-radius: 10px;
+            text-align: left;
+            margin-top: 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-choice-element:hover {
+            background-color: #4b5563;
+            border-color: var(--accent-cyan);
+        }
+
+        .quiz-choice-element.state-correct {
+            background-color: rgba(16, 185, 129, 0.15) !important;
+            border-color: var(--status-success) !important;
+            color: var(--status-success);
+        }
+
+        .quiz-choice-element.state-incorrect {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--status-danger) !important;
+            color: var(--status-danger);
+        }
+
+        .quiz-feedback-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: rgba(6, 182, 212, 0.05);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 0 12px 12px 0;
+            display: none;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-branding">
+            <h1>SECURITY OPS LAB</h1>
+            <p>Phishing Simulation System</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-link active" onclick="switchTab('view-triage')">Task 1: Inbox Triage Frame</li>
+            <li class="nav-link" onclick="switchTab('view-dissector')">Task 2: Vector Header Dissector</li>
+            <li class="nav-link" onclick="switchTab('view-quiz')">Task 3: Training Sessions (30 Qs)</li>
+        </ul>
+    </nav>
+
+    <main>
+
+        <section id="view-triage" class="view-panel active">
+            <div class="section-header">
+                <h2>Task 1: Email Inbox Triage Engine</h2>
+                <p class="section-subtext">Evaluate structural metrics and direct the containment routing pipeline for incoming payloads.</p>
+            </div>
+            
+            <div class="interactive-card">
+                <div class="alert-toast-container" id="triage-toast"></div>
+                <div class="split-inbox-grid">
+                    <div class="inbox-list-pane">
+                        <div class="pane-sub-header">Live Evaluation Streams</div>
+                        <div class="scrollable-email-list" id="triage-list-target"></div>
+                    </div>
+                    <div class="viewpane-display-window">
+                        <div class="display-window-meta" id="triage-meta-target"></div>
+                        <div class="display-window-body" id="triage-body-target"></div>
+                        <div class="action-control-tray">
+                            <button class="action-btn action-btn-safe" onclick="evalTriage('safe')">Archive Transmission</button>
+                            <button class="action-btn action-btn-warn" onclick="evalTriage('escalate')">Escalate Pipeline</button>
+                            <button class="action-btn action-btn-danger" onclick="evalTriage('report')">Isolate Asset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-dissector" class="view-panel">
+            <div class="section-header">
+                <h2>Task 2: Dynamic Vector Dissector</h2>
+                <p class="section-subtext">Click identified header strings to analyze anomalous payload configuration signatures.</p>
+            </div>
+            
+            <div class="forensic-em-box">
+                <div style="padding-bottom:1.5rem; border-bottom:1px solid #e2e8f0; font-size:0.95rem; line-height:2;">
+                    <div><strong>From Routing Array:</strong> Infrastructure Operations <span class="hotspot-tag" onclick="runDissect('sender')">&lt;verification-relay@global-identity-routing.net&gt;</span></div>
+                    <div><strong>Transmission Header:</strong> <span class="hotspot-tag" onclick="runDissect('subject')">ALERT: Session Re-Authentication Required immediately - Failure Triggers Automated Deprovisioning</span></div>
+                </div>
+                <div style="padding-top:2rem; font-size:1rem; line-height:1.7; color:#334155;">
+                    <p style="margin-bottom:1.25rem;">Attention Network Operator,</p>
+                    <p style="margin-bottom:1.25rem;">An anomalous synchronization mismatch was detected within tenant environment execution layer 4. Re-establish credentials validation data packet sequence immediately at the primary interface gate:</p>
+                    <p style="margin-bottom:1.75rem;"><span class="hotspot-tag" onclick="runDissect('url')">https://sso-portal.identity.global-identity-routing.net/secure-auth/login</span></p>
+                    <p style="margin-bottom:1.25rem;">Failure to complete explicit verification constraints within a 60-minute window will execute target termination code paths.</p>
+                    <p>Reference System Manifest Archive Payload: <span class="hotspot-tag" onclick="runDissect('attachment')">NETWORK_DIAGRAM_MIGRATION_SPECS.xlsm</span></p>
+                </div>
+            </div>
+
+            <div class="forensic-console-log" id="dissect-log-box">
+                <span style="color:var(--text-muted); font-style:italic;">Select any high-priority boundary anchor inside the email window above to execute evaluation logic output...</span>
+            </div>
+        </section>
+
+        <section id="view-quiz" class="view-panel">
+            <div class="section-header">
+                <h2>Task 3: Focused Training Sessions Matrix</h2>
+                <p class="section-subtext">Select a dedicated training module configuration. Each independent lab track contains 10 technical items.</p>
+            </div>
+
+            <div class="session-grid-layout">
+                <div class="session-select-card active" id="session-card-0" onclick="selectSession(0)">
+                    <h4>Session Module 01</h4>
+                    <p>Infrastructure Header Fingerprinting & Domain Spoofing Analysis matrices.</p>
+                </div>
+                <div class="session-select-card" id="session-card-1" onclick="selectSession(1)">
+                    <h4>Session Module 02</h4>
+                    <p>Advanced Smishing Vector Layouts & Vishing Social Engineering Mechanics.</p>
+                </div>
+                <div class="session-select-card" id="session-card-2" onclick="selectSession(2)">
+                    <h4>Session Module 03</h4>
+                    <p>Business Email Compromise (BEC) Patterns & High-Authority Whaling Tactics.</p>
+                </div>
+            </div>
+
+            <div class="quiz-engine-wrapper" id="quiz-block-root">
+                </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Global State Management Routing
+        function switchTab(targetTabId) {
+            document.querySelectorAll('.view-panel').forEach(pane => pane.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(targetTabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(targetTabId === 'view-quiz') { loadActiveSessionInterface(); }
+        }
+
+        // ==========================================
+        // DATA MODEL SYSTEM: Task 1 (Inbox Engine)
+        // ==========================================
+        const inboxDataset = [
+            {
+                id: 0,
+                sender: "Enterprise Authentication Proxy Systems",
+                email: "auth-gateway@security-perimeter-updates.com",
+                subject: "CRITICAL RE-AUTHENTICATION MATRIX: Token Synchronization Expiration Alert",
+                body: "<p>System Administrator,</p><p>Security monitoring event logs show an authentication handshake timeout state across high-priority asset cluster 9. Re-verify the access matrix identity array instantly to retain synchronization:</p><p style='margin: 1.25rem 0; font-weight:700; color:#2563eb;'>https://identity.security-perimeter-updates.com/session-reauth</p><p>Unverified parameters trigger system isolation flags within 30 minutes.</p>",
+                correctRoute: "report",
+                feedback: "Correct verification strategy. The domain space handles typosquatting rules targeting standard corporate terminology blueprints."
+            },
+            {
+                id: 1,
+                sender: "Enterprise Asset Logging Services",
+                email: "syslog-daemon@internal-resource-pool.local",
+                subject: "[LOG METRIC] Cron Job Automation Partition S-3 Integrity Check Clear",
+                body: "<p>Operations Core,</p><p>Routine block-storage integrity monitoring finished tracking array passes without reporting system warning flags. Partition block allocations remain inside nominal runtime metrics.</p>",
+                correctRoute: "safe",
+                feedback: "Correct choice. This trace reflects an expected structural logging transmission originating from local loop address domains."
+            },
+            {
+                id: 2,
+                sender: "Executive Compensation Desk",
+                email: "payroll-disbursements@corporate-hq-office.org",
+                subject: "CONFIDENTIAL ADJUSTMENT DETAILS: Q2 Discretionary Bonus Allocations Document",
+                body: "<p>Internal Staff,</p><p>Executive committee oversight models finalized bonus scaling percentages. Identify your performance target modification metric via the file container payload appended below.</p><p style='margin:1.25rem 0; font-weight:700; color:#dc2626;'>Payload Reference Asset: BONUS_DISTRIBUTION_SCHEDULING.xlsm</p>",
+                correctRoute: "escalate",
+                feedback: "Correct processing decision. Macro-enabled file types combined with financial lures match high-severity delivery profiles requiring SOC analysis."
+            }
+        ];
+
+        let activeInboxId = 0;
+        const completeInboxTracks = new Set();
+
+        function initInboxComponent() {
+            const listTarget = document.getElementById('triage-list-target');
+            if(!listTarget) return;
+            listTarget.innerHTML = '';
+            inboxDataset.forEach((msg, index) => {
+                const node = document.createElement('div');
+                node.className = `email-list-node ${index === activeInboxId ? 'active' : ''}`;
+                node.id = `inbox-node-${msg.id}`;
+                node.onclick = () => renderSelectedEmail(msg.id);
+                node.innerHTML = `
+                    <div class="node-sender">${msg.sender}</div>
+                    <div class="node-subject">${msg.subject}</div>
+                `;
+                listTarget.appendChild(node);
+            });
+            renderSelectedEmail(activeInboxId);
+        }
+
+        function renderSelectedEmail(id) {
+            activeInboxId = id;
+            document.querySelectorAll('.email-list-node').forEach(node => node.classList.remove('active'));
+            const activeNode = document.getElementById(`inbox-node-${id}`);
+            if(activeNode) activeNode.classList.add('active');
+            
+            const targetData = inboxDataset.find(x => x.id === id);
+            document.getElementById('triage-meta-target').innerHTML = `
+                <div style="font-size:1.15rem; font-weight:700; margin-bottom:0.5rem; color:#1f2937;">${targetData.subject}</div>
+                <div style="font-size:0.85rem; color:#4b5563;"><strong>Routing String:</strong> ${targetData.sender} &lt;${targetData.email}&gt;</div>
+            `;
+            document.getElementById('triage-body-target').innerHTML = targetData.body;
+            document.getElementById('triage-toast').style.display = 'none';
+        }
+
+        function evalTriage(userDecision) {
+            const activeRecord = inboxDataset.find(x => x.id === activeInboxId);
+            const toastElement = document.getElementById('triage-toast');
+            
+            toastElement.style.display = 'block';
+            if(userDecision === activeRecord.correctRoute) {
+                toastElement.className = "alert-toast-container action-btn-safe";
+                toastElement.innerHTML = `<strong>System Evaluation Verified:</strong> ${activeRecord.feedback}`;
+                completeInboxTracks.add(activeInboxId);
+                const node = document.getElementById(`inbox-node-${activeInboxId}`);
+                if(node) node.classList.add('complete');
+            } else {
+                toastElement.className = "alert-toast-container action-btn-danger";
+                toastElement.innerHTML = `<strong>Anomalous Vector Pattern Mismatch:</strong> The selection did not mitigate risk parameters properly. Inspect delivery artifacts again.`;
+            }
+        }
+
+        // ==========================================
+        // DATA MODEL SYSTEM: Task 2 (Forensic System)
+        // ==========================================
+        function runDissect(hotspotKey) {
+            const consoleBox = document.getElementById('dissect-log-box');
+            const forensicsMap = {
+                sender: "<strong>SPOOFING METRIC:</strong> The string claims internal origins, but terminates at an external top-level domain asset outside corporate directory zone definitions.",
+                subject: "<strong>BIAS COGNITION MAPPED:</strong> The subject vector relies on extreme panic indicators ('Failure Triggers Automated Deprovisioning') to disrupt systematic authorization checklists.",
+                url: "<strong>ROUTING MISDIRECTION:</strong> The anchor displays lookalike prefix nesting to create structural alignment with corporate internal endpoints, but routes directly to third-party infrastructure components.",
+                attachment: "<strong>MALWARE VECTOR DETECTED:</strong> Incorporates a macro structure extension (.xlsm). Executing this logic initialization executes underlying commands targeting persistent internal connections."
+            };
+            consoleBox.innerHTML = forensicsMap[hotspotKey] || "";
+        }
+
+        // ==========================================
+        // DATA MODEL SYSTEM: Task 3 (30 Question Matrix)
+        // ==========================================
+        const multidimensionalQuizRepository = [
+            // SESSION 01: HEADERS AND DOMAIN STRUCTURES
+            [
+                { q: "Which core architectural element is used during a character-swapping typosquatting attack matrix?", o: ["Cryptographic handshake alteration", "Visual string spoofing using lookalike characters", "Cross-site structural frame manipulation", "DNS authoritative record zone transfer generation"], c: 1, e: "Typosquatting shifts characters inside domain layouts to trick rapid eye tracking inspections." },
+                { q: "An email contains a matching 'From' value, but the 'Return-Path' directive targets an unknown external node. What pattern does this show?", o: ["Valid multi-tenant pathing configuration", "Header envelope spoofing framework execution", "Unencrypted protocol routing mechanism", "Implicit access token rotation cycle"], c: 1, e: "The Return-Path header tracks delivery destination routes. Mismatches relative to the outward header show spoofed delivery wrappers." },
+                { q: "What role does the DomainKeys Identified Mail (DKIM) infrastructure record provide?", o: ["Encrypts plaintext attachment files", "Affixes a verifiable cryptographic signature trace validating origin status", "Filters blacklisted text string arrays dynamically", "Enforces secure TLS socket layers automatically"], c: 1, e: "DKIM handles message validation processing through asymmetric crypto signatures attached directly into packet fields." },
+                { q: "Analyze this target path structure: 'https://security.corporate-login.net.validation-node.com/auth'. Which domain controls this space?", o: ["corporate-login.net", "validation-node.com", "security.corporate-login.net", "auth.com"], c: 1, e: "The domain path status tracks directly leftward from the primary folder boundary slash. Here, validation-node.com is the absolute owner zone." },
+                { q: "What does a DMARC policy directive indicating 'p=reject' command an inbound mail transport server to do?", o: ["Route the payload tracking packet into quarantine spaces", "Drop processing workflows for payloads failing evaluation metrics", "Strip macro code frameworks out of active structures", "Force connection requests back down to unencrypted channels"], c: 1, e: "A rejection rule instructs receiving transport gateways to terminate data processing pathways for invalid payloads." },
+                { q: "Which sub-component within an email layout structure contains metadata detailing the transit path history of a packet across nodes?", o: ["MIME payload demarcation boundaries", "Received headers block array stack", "Subject encryption field structures", "Return-Path envelope trailers"], c: 1, e: "Received field data appends tracing entries systematically at each boundary hop across routing systems." },
+                { q: "An entity establishes a lookalike registration profile mapping exactly to 'company-support.com' instead of 'company.com'. What is this strategy?", o: ["Subdomain nesting tactics", "Cousin-domain generation schema", "Reverse proxy hijacking architecture", "Path traversal injection pattern"], c: 1, e: "Cousin domains or lookalike assets mirror enterprise identities while adding trailing qualifiers to bypass pattern detection systems." },
+                { q: "What structural verification failure occurs if SPF parameters are evaluated against an unauthorized external transit IP vector?", o: ["The record parsing array drops into infinite processing loops", "The evaluating gateway flags a hard/soft failure condition", "The delivery layer enforces asymmetric payload encryption operations", "The client terminal automatically terminates local execution paths"], c: 1, e: "SPF checks track sending server IP footprints against authorized block matrix tables published inside DNS zones." },
+                { q: "Why do target actors use subtle non-standard subdomains such as 'secure.auth.updates.target-identity.com'?", o: ["To force lower protocol transport velocities", "To camouflage malicious endpoint routing strings inside complex sub-structures", "To bypass localized web application firewall rules", "To drop credential inputs into cleartext log files"], c: 1, e: "Complex structural nesting hides primary domain registration indicators from casual observation paths." },
+                { q: "What does the presence of an authentic valid TLS certificate indicate regarding a specific target domain landing zone?", o: ["The platform layout content is verified as trusted and safe", "The active link connection data channel is encrypted during processing", "The system backend is impervious to injection vector vulnerabilities", "The domain asset is hosted within local geographical limits"], c: 1, e: "TLS certificates only handle transport-layer data encryption; they provide no contextual assurance regarding site safety or owner intent." }
+            ],
+            // SESSION 02: SMISHING & VISHING VECTORS
+            [
+                { q: "A target short URL path structure (e.g., 't.ly/alpha') arrives via an SMS cellular transmission channel. What tactical risk rule applies here?", o: ["The network carrier handles automated script injection processing", "The real destination structure is hidden from defensive analysis loops", "The transport layer switches down to cleartext protocols", "The local mobile device forces remote sandbox execution termination"], c: 1, e: "URL shortening models hide destination domains from pattern scanning utilities and end-user inspection tracks." },
+                { q: "What method describes a Vishing attack trajectory?", o: ["Injecting malicious structures into database search tools", "Using high-fidelity voice channels to orchestrate social engineering scripts", "Transmitting macro-enabled sheets via regional logistics portals", "Intercepting authentication packets inside wireless target perimeters"], c: 1, e: "Vishing focuses directly on voice communications, utilizing interactive verbal manipulation patterns to extract access details." },
+                { q: "An attacker employs deepfake generative voice synthesis models during an interactive telephone exchange. What control metric mitigates this risk?", o: ["Deploying stricter endpoint device password characters", "Utilizing independent out-of-band validation routes", "Increasing periodic firewall logging frequencies", "Switching local client systems to offline mode frameworks"], c: 1, e: "Out-of-band validation breaks synthesis tricks by confirming instructions across trusted corporate networks." },
+                { q: "What psychological pressure tactic is active when a smishing text states: 'Emergency account lockout active: verify within 5 minutes'?", o: ["Social conformity validation metrics", "Extreme artificial time constraint manipulation", "Reciprocal benefit infrastructure modeling", "Authority-based process optimization"], c: 1, e: "Tight time limits create synthetic panic, prompting operators to bypass standard handling rules." },
+                { q: "Which technical control asset handles automated mitigation filtering against known malicious SMS message structures?", o: ["Host intrusion detection engines", "Carrier-grade spam identification databases and text analysis blocks", "Application-layer stateful proxy components", "Local disk storage volume encryption patterns"], c: 1, e: "Carrier text analysis components scan keyword signatures and destination reputation blocks to filter smishing payloads before device delivery." },
+                { q: "A call trace requests an operator to execute key inputs matching an MMI sequence code (*#21#) on a mobile asset. What target risk exists?", o: ["Triggers full factory baseline storage formatting", "Initiates unauthorized remote call forwarding rules", "Disables cellular network authentication tokens", "Exfiltrates local sandbox directory structures"], c: 1, e: "MMI/SS codes can configure network routing profiles, allowing attackers to hijack voice and text confirmation tokens." },
+                { q: "How do modern smishing vectors bypass standard text pattern recognition blocks?", o: ["By routing data packets over legacy satellite infrastructure lines", "By substituting standard characters with alternate unicode variants", "By forging immediate system runtime stack overflows", "By deploying hardware-level interception tools"], c: 1, e: "Using lookalike unicode characters keeps keywords readable to human targets while breaking signature identification lookups." },
+                { q: "A target caller requests system information while claiming to be an external telecommunications technician. Which validation step is required?", o: ["Provide targeted access metrics to maintain operational continuity", "Refuse disclosure and verify their corporate profile via verified internal directory records", "Route the call interface directly into public storage zones", "Execute local system validation traces inside production databases"], c: 1, e: "Pretexting schemes require strict independent identification lookups against internal directory records." },
+                { q: "Why are personal mobile assets targeted inside modern corporate network access architectures?", o: ["They use standard processing hardware layers", "They often act as trusted links in Multi-Factor Authentication workflows", "They communicate via distinct physical routing paths", "They lack secure browser sandbox configurations"], c: 1, e: "Mobile units are prime secondary tracking vectors because they intercept 2FA tokens used to confirm high-value accounts." },
+                { q: "What strategy defines the security approach against text-based link delivery risks?", o: ["Enforcing complex screen lockout password rules", "Blocking links in SMS and instructing users to navigate directly via official portals", "Routinely cycling physical SIM registration components", "Deploying network-layer encryption tools on personal devices"], c: 1, e: "Navigating only through known, manual portal endpoints neutralizes link manipulation schemes." }
+            ],
+            // SESSION 03: BUSINESS EMAIL COMPROMISE (BEC) & WHALING
+            [
+                { q: "Which defining characteristic separates a standard phishing sweep from a Business Email Compromise (BEC) campaign?", o: ["BEC relies heavily on automated malware execution matrices", "BEC is highly targeted, low-volume, and exploits established business workflows", "BEC uses large-scale automated port discovery sweeps", "BEC targets unauthenticated database connection strings"], c: 1, e: "BEC maneuvers around signature detection by using custom text layouts tailored to internal target workflows." },
+                { q: "A Whaling attack model targets which group within an organization?", o: ["Temporary entry-level operational personnel", "High-visibility senior executives and leadership assets", "Database engineering system controllers", "Physical facilities management staff"], c: 1, e: "Whaling targets senior executives because their accounts possess broad administrative privileges and financial authority." },
+                { q: "An email mimicking an internal supplier requests an immediate routing adjustment for pending invoice payouts. What is this tactic?", o: ["Cross-site request engineering campaign", "Vendor Email Compromise / Supply Chain hijacking", "Distributed denial of processing event", "SQL injection parameter manipulation"], c: 1, e: "Supply chain hijacking intercepts existing business tracks to route payments to fraudulent infrastructure endpoints." },
+                { q: "What technical control prevents domain-spoofing vectors where an attacker clones internal names on lookalike assets?", o: ["Localized storage volume partitioning schemes", "Rigid configuration of SPF, DKIM, and strict DMARC enforcement records", "Increasing edge firewall throughput rules", "Applying complex length rules across password repositories"], c: 1, e: "Enforcing rigorous email validation protocols prevents unauthorized external senders from spoofing enterprise domains." },
+                { q: "Why does an attacker monitor corporate leadership changes via public OSINT channels during a BEC campaign?", o: ["To build custom exploits targeting specific browser models", "To identify structural operational gaps and exploit authority during onboarding windows", "To map physical database architecture diagrams", "To bypass remote application proxy systems"], c: 1, e: "Leadership transitions create ideal opportunities to exploit organizational confusion and authority bias." },
+                { q: "An email layout appears as an urgent executive request, instructing a financial analyst to execute a wire transfer while bypassing secondary approval steps. What is the correct response?", o: ["Complete the transfer immediately to preserve operational momentum", "Execute the transfer but log an explanatory entry in tracking tools", "Halt the transaction and verify via a distinct, trusted out-of-band confirmation path", "Forward the authorization request to external accounting partners"], c: 2, e: "Internal transfer protocols must be independently verified out-of-band whenever anomalies bypass standard controls." },
+                { q: "What mechanism is typically exploited during an advanced executive impersonation attack sequence?", o: ["Hardware-level execution matrix faults", "Social authority patterns and corporate hierarchy deference biases", "Database synchronization timeouts", "Unpatched application runtime vulnerabilities"], c: 1, e: "Impersonation schemes exploit corporate social dynamics, using hierarchical authority to discourage verification checks." },
+                { q: "An attacker uses a compromise vector to gain read access to an executive's mailbox for tracking internal threads. What is this phase?", o: ["Perimeter defense scanning operations", "Internal reconnaissance and pattern collection", "Active payload installation tracking", "Boundary credential stuffing execution"], c: 1, e: "Monitoring active threads provides context, enabling attackers to inject realistic lures into existing business conversations." },
+                { q: "Which control optimizes resilience against fraud schemes involving invoice alterations?", o: ["Enforcing strict dual-authorization controls with multi-person out-of-band sign-offs", "Implementing daily password rotation policies across systems", "Restricting database query operations to off-peak schedules", "Encrypting cleartext communication archives on disk"], c: 0, e: "Dual-authorization controls ensure no single compromised account can unilaterally execute high-value financial transfers." },
+                { q: "A BEC message requests an immediate copy of the organization's entire W-2 tax profile dataset. What is this target vector?", o: ["System infrastructure fingerprinting", "Bulk Identity / PII data harvesting campaign", "Application layer buffer exploit path", "Persistent network scanning initiative"], c: 1, e: "Harvesting complete tax and PII profiles provides attackers with high-value data for downstream secondary identity fraud campaigns." }
+            ]
+        ];
+
+        let currentActiveSessionIdx = 0;
+        let evaluationQuestionIdx = 0;
+        let cumulativeSessionScore = 0;
+
+        function selectSession(sessionIdx) {
+            currentActiveSessionIdx = sessionIdx;
+            document.querySelectorAll('.session-select-card').forEach(card => card.classList.remove('active'));
+            const selectedCard = document.getElementById(`session-card-${sessionIdx}`);
+            if(selectedCard) selectedCard.classList.add('active');
+            loadActiveSessionInterface();
+        }
+
+        function loadActiveSessionInterface() {
+            evaluationQuestionIdx = 0;
+            cumulativeSessionScore = 0;
+            renderQuizItem();
+        }
+
+        function renderQuizItem() {
+            const rootContainer = document.getElementById('quiz-block-root');
+            if(!rootContainer) return;
+            const targetSessionDataSet = multidimensionalQuizRepository[currentActiveSessionIdx];
+            
+            if(evaluationQuestionIdx >= targetSessionDataSet.length) {
+                rootContainer.innerHTML = `
+                    <div style="text-align:center; padding: 2rem 0;">
+                        <h3 style="font-size:1.75rem; color:var(--accent-cyan);">Lab Session Module Concluded</h3>
+                        <p style="color:var(--text-muted); margin: 0.5rem 0 2rem 0;">Evaluation metric tracking has been logged.</p>
+                        <div style="font-size:4.5rem; font-weight:800; color:var(--text-main); margin-bottom:1.5rem;">
+                            ${cumulativeSessionScore} <span style="font-size:2rem; color:var(--text-muted);">/ ${targetSessionDataSet.length}</span>
+                        </div>
+                        <button class="action-btn action-btn-prime" onclick="loadActiveSessionInterface()">Re-execute Module Parameters</button>
+                    </div>`;
+                return;
+            }
+
+            const currentItem = targetSessionDataSet[evaluationQuestionIdx];
+            const currentPercentageValue = (evaluationQuestionIdx / targetSessionDataSet.length) * 100;
+
+            let constructionOptionBlockHTML = '';
+            currentItem.o.forEach((optionText, optIndex) => {
+                constructionOptionBlockHTML += `<button class="quiz-choice-element" onclick="validateSelectedChoice(${optIndex})">${optionText}</button>`;
+            });
+
+            rootContainer.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.75rem; font-weight:700; color:var(--accent-cyan); text-transform:uppercase; letter-spacing:1px;">Question Matrix ${evaluationQuestionIdx + 1} of ${targetSessionDataSet.length}</span>
+                        <span style="font-size:0.85rem; color:var(--text-muted);">Accuracy: ${cumulativeSessionScore} True Match State</span>
+                    </div>
+                    <div class="linear-progress-track">
+                        <div class="linear-progress-bar" style="width: ${currentPercentageValue}%;"></div>
+                    </div>
+                    <h3 style="font-size:1.3rem; font-weight:600; line-height:1.5; margin-bottom:2rem;">${currentItem.q}</h3>
+                    <div style="margin-bottom:2rem;">${constructionOptionBlockHTML}</div>
+                    <div class="quiz-feedback-box" id="feedback-node-display">${currentItem.e}</div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:2rem;">
+                        <button class="action-btn action-btn-prime" id="quiz-next-step-btn" style="display:none;" onclick="stepNextEvaluationItem()">Advance Track &rarr;</button>
+                    </div>
+                </div>`;
+        }
+
+        function validateSelectedChoice(selectedOptionIdx) {
+            const activeQuestionRecord = multidimensionalQuizRepository[currentActiveSessionIdx][evaluationQuestionIdx];
+            const controlNodes = document.querySelectorAll('.quiz-choice-element');
+            
+            controlNodes.forEach(btn => btn.removeAttribute('onclick'));
+            
+            if(selectedOptionIdx === activeQuestionRecord.c) {
+                controlNodes[selectedOptionIdx].classList.add('state-correct');
+                cumulativeSessionScore++;
+            } else {
+                controlNodes[selectedOptionIdx].classList.add('state-incorrect');
+                if(controlNodes[activeQuestionRecord.c]) controlNodes[activeQuestionRecord.c].classList.add('state-correct');
+            }
+
+            document.getElementById('feedback-node-display').style.display = 'block';
+            document.getElementById('quiz-next-step-btn').style.display = 'block';
+        }
+
+        function stepNextEvaluationItem() {
+            evaluationQuestionIdx++;
+            renderQuizItem();
+        }
+
+        // Environment Loading Hook
+        window.onload = () => {
+            initInboxComponent();
+        };
+    </script>
+</body>
+</html>
